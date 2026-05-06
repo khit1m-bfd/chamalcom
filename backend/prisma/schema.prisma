@@ -1,0 +1,276 @@
+// ─── Prisma Schema — ChamalCom ────────────────────────────────────────────────
+// MySQL 8.0 | 8 tables indépendantes (3NF, sans héritage)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── 1. ADMIN ─────────────────────────────────────────────────────────────────
+model Admin {
+  id           Int          @id @default(autoincrement())
+  nom          String       @db.VarChar(100)
+  prenom       String       @db.VarChar(100)
+  email        String       @unique @db.VarChar(255)
+  mot_de_passe String       @db.VarChar(255)
+  telephone    String?      @db.VarChar(20)
+  statut       AdminStatut  @default(actif)
+  created_at   DateTime     @default(now())
+
+  // Relations
+  proprietaires_verifies Proprietaire[]
+
+  @@map("admin")
+}
+
+enum AdminStatut {
+  actif
+  inactif
+}
+
+// ─── 2. PROPRIÉTAIRE ──────────────────────────────────────────────────────────
+model Proprietaire {
+  id                    Int                          @id @default(autoincrement())
+  nom                   String                       @db.VarChar(100)
+  prenom                String                       @db.VarChar(100)
+  email                 String                       @unique @db.VarChar(255)
+  mot_de_passe          String                       @db.VarChar(255)
+  telephone             String                       @db.VarChar(20)
+  cin                   String                       @unique @db.VarChar(20)
+  rib                   String?                      @db.VarChar(50)
+  banque                String?                      @db.VarChar(100)
+  statut_verification   StatutVerificationProprietaire @default(en_attente)
+  date_inscription      DateTime                     @default(now())
+  date_verification     DateTime?
+  id_admin_verificateur Int?
+
+  // Relations
+  admin_verificateur Admin?         @relation(fields: [id_admin_verificateur], references: [id], onDelete: SetNull)
+  appartements       Appartement[]
+
+  @@index([statut_verification])
+  @@map("proprietaire")
+}
+
+enum StatutVerificationProprietaire {
+  en_attente
+  verifie
+  refuse
+  suspendu
+}
+
+// ─── 3. CLIENT ────────────────────────────────────────────────────────────────
+model Client {
+  id               Int           @id @default(autoincrement())
+  nom              String        @db.VarChar(100)
+  prenom           String        @db.VarChar(100)
+  email            String        @unique @db.VarChar(255)
+  mot_de_passe     String        @db.VarChar(255)
+  telephone        String?       @db.VarChar(20)
+  date_naissance   DateTime?     @db.Date
+  nationalite      String?       @db.VarChar(100)
+  adresse          String?       @db.VarChar(500)
+  statut           ClientStatut  @default(actif)
+  date_inscription DateTime      @default(now())
+
+  // Relations
+  reservations Reservation[]
+  avis         Avis[]
+
+  @@index([statut])
+  @@map("client")
+}
+
+enum ClientStatut {
+  actif
+  suspendu
+}
+
+// ─── 4. APPARTEMENT ───────────────────────────────────────────────────────────
+model Appartement {
+  id               Int                 @id @default(autoincrement())
+  id_proprietaire  Int
+  titre            String              @db.VarChar(255)
+  description      String              @db.Text
+  adresse          String              @db.VarChar(500)
+  ville            String              @default("Oued Laou") @db.VarChar(100)
+  region           String              @default("Tanger-Tétouan-Al Hoceima") @db.VarChar(150)
+  surface_m2       Float
+  nb_chambres      Int
+  nb_salles_bain   Int
+  capacite_max     Int
+  prix_nuit        Decimal             @db.Decimal(10, 2)
+  caution          Decimal             @default(0) @db.Decimal(10, 2)
+  equipements      String              @db.Text
+  statut           AppartementStatut   @default(en_attente_validation)
+  latitude         Decimal?            @db.Decimal(10, 7)
+  longitude        Decimal?            @db.Decimal(10, 7)
+  created_at       DateTime            @default(now())
+  updated_at       DateTime            @updatedAt
+
+  // Relations
+  proprietaire Proprietaire         @relation(fields: [id_proprietaire], references: [id], onDelete: Cascade)
+  images       ImageAppartement[]
+  reservations Reservation[]
+  avis         Avis[]
+
+  @@index([statut, ville, prix_nuit])
+  @@index([id_proprietaire])
+  @@map("appartement")
+}
+
+enum AppartementStatut {
+  disponible
+  en_attente_validation
+  suspendu
+  archive
+}
+
+// ─── 5. IMAGE APPARTEMENT ─────────────────────────────────────────────────────
+model ImageAppartement {
+  id               Int      @id @default(autoincrement())
+  id_appartement   Int
+  url_image        String   @db.VarChar(500)
+  nom_fichier      String   @db.VarChar(255)
+  taille_ko        Int?
+  format           ImageFormat @default(webp)
+  est_principale   Boolean  @default(false)
+  ordre_affichage  Int      @default(0)
+  date_upload      DateTime @default(now())
+
+  // Relations
+  appartement Appartement @relation(fields: [id_appartement], references: [id], onDelete: Cascade)
+
+  @@index([id_appartement, est_principale])
+  @@map("image_appartement")
+}
+
+enum ImageFormat {
+  jpg
+  png
+  webp
+}
+
+// ─── 6. RÉSERVATION ───────────────────────────────────────────────────────────
+model Reservation {
+  id                  Int                @id @default(autoincrement())
+  id_client           Int
+  id_appartement      Int
+  date_arrivee        DateTime           @db.Date
+  date_depart         DateTime           @db.Date
+  nb_nuits            Int
+  nb_personnes        Int
+  prix_nuit_applique  Decimal            @db.Decimal(10, 2)
+  prix_total          Decimal            @db.Decimal(10, 2)
+  statut              ReservationStatut  @default(en_attente)
+  message_client      String?            @db.Text
+  motif_annulation    String?            @db.Text
+  created_at          DateTime           @default(now())
+  date_confirmation   DateTime?
+
+  // Relations
+  client      Client      @relation(fields: [id_client], references: [id], onDelete: Restrict)
+  appartement Appartement @relation(fields: [id_appartement], references: [id], onDelete: Restrict)
+  paiement    Paiement?
+  avis        Avis?
+
+  @@index([date_arrivee, date_depart, id_appartement])
+  @@index([id_client])
+  @@index([statut])
+  @@map("reservation")
+}
+
+enum ReservationStatut {
+  en_attente
+  confirmee
+  annulee_client
+  annulee_proprietaire
+  terminee
+  litige
+}
+
+// ─── 7. PAIEMENT ──────────────────────────────────────────────────────────────
+model Paiement {
+  id                  Int             @id @default(autoincrement())
+  id_reservation      Int             @unique
+  montant             Decimal         @db.Decimal(10, 2)
+  taux_commission     Decimal         @default(10) @db.Decimal(5, 2)
+  montant_commission  Decimal         @db.Decimal(10, 2)
+  montant_proprietaire Decimal        @db.Decimal(10, 2)
+  methode             PaiementMethode
+  statut              PaiementStatut  @default(en_attente)
+  reference_externe   String?         @db.VarChar(255)
+  date_paiement       DateTime?
+  date_remboursement  DateTime?
+
+  // Relations
+  reservation Reservation @relation(fields: [id_reservation], references: [id], onDelete: Restrict)
+
+  @@index([statut])
+  @@map("paiement")
+}
+
+enum PaiementMethode {
+  CMI
+  PayPal
+  virement_bancaire
+  especes
+}
+
+enum PaiementStatut {
+  en_attente
+  valide
+  echoue
+  rembourse
+}
+
+// ─── 8. AVIS ──────────────────────────────────────────────────────────────────
+model Avis {
+  id                   Int        @id @default(autoincrement())
+  id_client            Int
+  id_appartement       Int
+  id_reservation       Int        @unique
+  note_proprete        Int        @db.TinyInt
+  note_localisation    Int        @db.TinyInt
+  note_rapport_qp      Int        @db.TinyInt
+  note_communication   Int        @db.TinyInt
+  note_globale         Decimal    @db.Decimal(3, 2)
+  commentaire          String     @db.Text
+  reponse_proprietaire String?    @db.Text
+  date_avis            DateTime   @default(now())
+  statut               AvisStatut @default(en_attente)
+
+  // Relations
+  client      Client      @relation(fields: [id_client], references: [id], onDelete: Restrict)
+  appartement Appartement @relation(fields: [id_appartement], references: [id], onDelete: Cascade)
+  reservation Reservation @relation(fields: [id_reservation], references: [id], onDelete: Restrict)
+
+  @@index([id_appartement, statut])
+  @@index([id_client])
+  @@map("avis")
+}
+
+enum AvisStatut {
+  en_attente
+  publie
+  masque
+}
+
+// ─── 9. NOTIFICATION ──────────────────────────────────────────────────────────
+model Notification {
+  id         Int      @id @default(autoincrement())
+  type_role  String   @db.VarChar(20)   // 'client' | 'proprietaire' | 'admin'
+  id_user    Int
+  titre      String   @db.VarChar(255)
+  message    String   @db.Text
+  lu         Boolean  @default(false)
+  lien       String?  @db.VarChar(500)
+  created_at DateTime @default(now())
+
+  @@index([type_role, id_user, lu])
+  @@map("notification")
+}

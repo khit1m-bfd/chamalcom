@@ -1,0 +1,151 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 38 33% 94%;
+    --foreground: 212 76% 23%;
+    --card: 0 0% 100%;
+    --card-foreground: 212 76% 23%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 212 76% 23%;
+    --primary: 212 76% 23%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 35 22% 87%;
+    --secondary-foreground: 212 76% 23%;
+    --muted: 35 22% 87%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 40 78% 60%;
+    --accent-foreground: 212 76% 23%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 34 18% 80%;
+    --input: 34 18% 80%;
+    --ring: 214 73% 38%;
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* RTL-specific resets */
+  [dir="rtl"] {
+    text-align: right;
+  }
+
+  /* Override for explicitly ltr elements */
+  [dir="rtl"] .ltr {
+    direction: ltr;
+    text-align: left;
+  }
+
+  /* Arabic typography */
+  :lang(ar) {
+    font-family: var(--font-cairo), 'Cairo', sans-serif;
+    line-height: 1.8;
+    word-spacing: 0.05em;
+  }
+
+  :lang(ar) h1,
+  :lang(ar) h2,
+  :lang(ar) h3,
+  :lang(ar) h4,
+  :lang(ar) h5,
+  :lang(ar) h6 {
+    font-family: var(--font-arabic), 'Noto Kufi Arabic', sans-serif;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+}
+
+@layer components {
+  .container-app {
+    @apply container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-white px-6 py-3 rounded-lg font-medium
+           hover:bg-primary-mid transition-colors duration-200
+           focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-gold {
+    @apply bg-gold text-primary px-6 py-3 rounded-lg font-semibold
+           hover:bg-gold-dark transition-colors duration-200
+           focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2
+           shadow-md hover:shadow-lg;
+  }
+
+  .card-apartment {
+    @apply bg-white rounded-xl shadow-card hover:shadow-card-hover
+           transition-all duration-300 overflow-hidden cursor-pointer
+           border border-sand-dark hover:border-primary-lt;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-lg border border-sand-dark
+           bg-white text-primary placeholder:text-gray-400
+           focus:outline-none focus:ring-2 focus:ring-primary-lt focus:border-primary-lt
+           transition-colors duration-200;
+  }
+
+  .status-badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .status-pending {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+
+  .status-confirmed {
+    @apply bg-teal text-white;
+  }
+
+  .status-cancelled {
+    @apply bg-red-100 text-red-800;
+  }
+
+  .status-completed {
+    @apply bg-gray-100 text-gray-800;
+  }
+
+  .section-title {
+    @apply text-2xl md:text-3xl font-bold text-primary mb-2;
+    font-family: var(--font-arabic), 'Noto Kufi Arabic', sans-serif;
+  }
+
+  .section-subtitle {
+    @apply text-gray-600 text-lg mb-8;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .gradient-overlay {
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgba(10, 61, 107, 0.7) 100%
+    );
+  }
+}
