@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
-import { getMessages, getTranslations } from 'next-intl/server';
+import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
 import { Noto_Kufi_Arabic, Cairo } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import { locales, type Locale } from '@/i18n';
 import '@/app/globals.css';
 import { Providers } from '@/app/providers';
 import { WhatsAppButton } from '@/components/common/WhatsAppButton';
+
+export const dynamic = 'force-dynamic';
 
 const notoKufiArabic = Noto_Kufi_Arabic({
   subsets: ['arabic'],
@@ -57,6 +59,7 @@ export default async function LocaleLayout({
 }) {
   if (!locales.includes(locale as Locale)) notFound();
 
+  setRequestLocale(locale);
   const messages = await getMessages();
 
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
