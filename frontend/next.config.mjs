@@ -4,7 +4,6 @@ const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
   images: {
@@ -23,7 +22,7 @@ const nextConfig = {
   },
   experimental: {
     serverActions: {
-      allowedOrigins: ['localhost:3000'],
+      allowedOrigins: ['localhost:3000', '*.vercel.app'],
     },
   },
 };
